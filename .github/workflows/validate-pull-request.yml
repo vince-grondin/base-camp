@@ -1,5 +1,6 @@
 on:
   pull_request:
+  workflow_dispatch:
 
 name: Validate Pull Request
 
@@ -15,6 +16,9 @@ jobs:
       - name: Install Foundry
         # https://github.com/marketplace/actions/foundry-toolchain
         uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install libraries
+        run: forge install OpenZeppelin/openzeppelin-contracts
 
       - name: Run tests
         run: forge test -vvv

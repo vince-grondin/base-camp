@@ -18,7 +18,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Set GitHub author identity
-        run: git config --global user.email vince.grondin@gmail.com --global user.name "Roch Grondin"
+        run: git config --global user.email vince.grondin@gmail.com; git config --global user.name "Roch Grondin"
 
       - name: Install libraries
         run: forge install OpenZeppelin/openzeppelin-contracts

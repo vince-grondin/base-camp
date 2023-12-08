@@ -21,7 +21,7 @@ jobs:
         env:
           GITHUB_USER_EMAIL: ${{ secrets.GH_USER_EMAIL }}
           GITHUB_USER_NAME: ${{ secrets.GH_USER_NAME }}
-        run: git config --global user.email $GITHUB_USER_EMAIL; git config --global user.name $GH_USER_NAME
+        run: git config --global user.email $GITHUB_USER_EMAIL; git config --global user.name $GITHUB_USER_NAME
 
       - name: Install libraries
         run: forge install OpenZeppelin/openzeppelin-contracts

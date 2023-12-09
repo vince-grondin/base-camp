@@ -26,7 +26,7 @@ contract AddressBook is Ownable {
 
     event ContactAdded(uint256 contactID, uint256 index);
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address _owner) Ownable(_owner) {}
 
     /**
      * @notice Adds a given contact's information to `contacts`. Usable only by the owner of the contract.
@@ -130,6 +130,6 @@ contract AddressBookFactory {
      * @return The address of the newly deployed `AddressBook` contract.
      */
     function deploy() external returns (address) {
-        return address(new AddressBook());
+        return address(new AddressBook(msg.sender));
     }
 }

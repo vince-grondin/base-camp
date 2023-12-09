@@ -125,11 +125,18 @@ contract AddressBook is Ownable {
  * @notice Factory to dynamically deploy instances of the `AddressBook` contract.
  */
 contract AddressBookFactory {
+    event AddressBookDeployed(address newAddressBookAddress);
+
     /**
      * @notice Creates an instance of `AddressBook` and assigns the caller as the owner of that instance.
      * @return The address of the newly deployed `AddressBook` contract.
      */
     function deploy() external returns (address) {
-        return address(new AddressBook(msg.sender));
+        AddressBook addressBook = new AddressBook(msg.sender);
+        address addressBookAddress = address(addressBook);
+
+        emit AddressBookDeployed(addressBookAddress);
+
+        return addressBookAddress;
     }
 }

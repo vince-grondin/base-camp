@@ -52,7 +52,7 @@ contract AddressBookTest is Test {
 
     function setUp() public {
         vm.startPrank(userA);
-        addressBook = new AddressBook();
+        addressBook = new AddressBook(userA);
     }
 
     /**

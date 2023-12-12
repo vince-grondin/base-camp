@@ -28,7 +28,7 @@ contract UnburnableToken {
 
     error UnsafeTransfer(address sender);
 
-    error TokensClaimed(uint balance);
+    error TokensClaimed();
 
     event TokensClaimedEvent(
         address recipient,
@@ -47,11 +47,10 @@ contract UnburnableToken {
      * @dev Reverts with a `TokensClaimed` error if a sender tries to claim more than once.
      *      Reverts with a `AllTokensClaimed` error if there are no tokens left to claim.
      *      Reverts with a `InsufficientSupply` error if there are not enough tokens left to claim.
-     * @return Whether the operation succeeded.
      */
-    function claim() public returns (bool) {
+    function claim() public {
         if (balances[msg.sender] != 0)
-            revert TokensClaimed(balances[msg.sender]);
+            revert TokensClaimed();
 
         if (totalSupply == 0)
             revert AllTokensClaimed();
@@ -67,8 +66,6 @@ contract UnburnableToken {
             totalSupply,
             totalClaimed
         );
-
-        return true;
     }
 
     /**
@@ -76,8 +73,8 @@ contract UnburnableToken {
      * @param _to The address where to transfer the `_amount` amount.
      * @param _amount The amount to transfer.
      */
-    function safeTransfer(address _to, uint _amount) public returns (bool) {
-        if (_to == address(0) || _amount <= 0)
+    function safeTransfer(address _to, uint _amount) public {
+        if (_to == 0x0000000000000000000000000000000000000000 || _to.balance == 0)
             revert UnsafeTransfer(_to);
 
         if (balances[msg.sender] < _amount)
@@ -85,7 +82,5 @@ contract UnburnableToken {
 
         balances[_to] += _amount;
         balances[msg.sender] -= _amount;
-
-        return true;
     }
 }

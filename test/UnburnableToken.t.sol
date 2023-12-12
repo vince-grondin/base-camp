@@ -62,11 +62,13 @@ contract UnburnableTokenTest is Test {
      * @dev Verifies that calling `claim` reverts with a `TokensClaimed` when the sender has already claimed one or more
      *      tokens.
      */
-    function test_GivenTokensAlreadyClaimedBySender_WhenClaiming_ThenTokensClaimedRevert() public {
+    function test_GivenTokensAlreadyClaimedBySender_WhenClaiming_ThenTokensClaimedRevert()
+        public
+    {
         vm.startPrank(userA);
         unburnableToken.claim();
 
-        expectTokensClaimedRevert(MAX_CLAIMABLE);
+        expectTokensClaimedRevert();
 
         unburnableToken.claim();
 
@@ -91,7 +93,8 @@ contract UnburnableTokenTest is Test {
         vm.startPrank(_address.toAddress());
         unburnableToken.claim();
 
-        uint expectedTotalClaimedAmount = (MAX_CLAIMABLE * claimIterations) + MAX_CLAIMABLE;
+        uint expectedTotalClaimedAmount = (MAX_CLAIMABLE * claimIterations) +
+            MAX_CLAIMABLE;
         assertEq(
             unburnableToken.totalSupply(),
             MAX_SUPPLY - expectedTotalClaimedAmount
@@ -112,7 +115,7 @@ contract UnburnableTokenTest is Test {
     function test_GivenToAddressIsZeroAddress_WhenSafeTransfer_ThenUnsafeTransferRevert(
         uint _amount
     ) public {
-        vm.assume(_amount > 0);
+        vm.assume(_amount > 0 && _amount <= MAX_CLAIMABLE);
 
         expectUnsafeTransferRevert(zeroAddress);
 
@@ -125,18 +128,23 @@ contract UnburnableTokenTest is Test {
     }
 
     /**
-     * @dev Verifies that calling `safeTransfer` with a `_amount` zero reverts with an `UnsafeTransfer` error.
-     * @param _address The address of the sender.
+     * @dev Verifies that calling `safeTransfer` with a `_to` recipient that has a 0 balance reverts with an
+     *      `UnsafeTransfer` error.
+     * @param _amount The amount to transfer.
+     * @param _to The address of the sender.
      */
-    function test_GivenAmountIsZero_WhenSafeTransfer_ThenUnsafeTransferRevert(
-        address _address
+    function test_GivenRecipientNotFunded_WhenSafeTransfer_ThenUnsafeTransferRevert(
+        uint _amount,
+        address _to
     ) public {
-        vm.assume(_address != zeroAddress);
-        uint amount = 0;
+        vm.assume(_amount > 0 && _amount <= MAX_CLAIMABLE);
+        vm.assume(_to != zeroAddress && _to != userA);
+
+        vm.deal(_to, 0 ether);
 
         vm.startPrank(userA);
-        expectUnsafeTransferRevert(_address);
-        unburnableToken.safeTransfer(_address, amount);
+        expectUnsafeTransferRevert(_to);
+        unburnableToken.safeTransfer(_to, _amount);
 
         assertEq(unburnableToken.totalSupply(), MAX_SUPPLY);
         assertEq(unburnableToken.totalClaimed(), 0);
@@ -158,8 +166,10 @@ contract UnburnableTokenTest is Test {
     ) public {
         uint _senderBalance = MAX_CLAIMABLE;
         vm.assume(_sender != zeroAddress);
-        vm.assume(_to != zeroAddress);
+        vm.assume(_to != _sender);
         vm.assume(_transferAmount > _senderBalance);
+
+        vm.deal(_to, 1 ether);
 
         vm.startPrank(_sender);
         unburnableToken.claim();
@@ -168,12 +178,19 @@ contract UnburnableTokenTest is Test {
 
         unburnableToken.safeTransfer(_to, _transferAmount);
 
-        assertEq(unburnableToken.totalSupply(), MAX_SUPPLY - _senderBalance);
-        assertEq(unburnableToken.totalClaimed(), _senderBalance);
+        uint expectedClaimed = MAX_CLAIMABLE;
+        assertEq(unburnableToken.totalSupply(), MAX_SUPPLY - expectedClaimed);
+        assertEq(unburnableToken.totalClaimed(), expectedClaimed);
         assertEq(unburnableToken.balances(_sender), _senderBalance);
         assertEq(unburnableToken.balances(_to), 0);
     }
 
+    /**
+     * @dev Verifies that calling `safeTransfer` to transfer an amount lower or equal to the sender's balance succeeds.
+     * @param _sender The address of the sender.
+     * @param _to The address to transfer the amount to.
+     * @param _transferAmount The amount to transfer from the sender to the `_to` recipient.
+     */
     function test_GivenNonZeroAddress_AndAmountLowerOrEqualSenderBalance_WehnSafeTransfer_ThenSuccess(
         address _sender,
         address _to,
@@ -184,14 +201,16 @@ contract UnburnableTokenTest is Test {
         vm.assume(_to != zeroAddress);
         vm.assume(_transferAmount > 0 && _transferAmount <= _senderBalance);
 
+        vm.deal(_to, 1 ether);
+
         vm.startPrank(_sender);
         unburnableToken.claim();
 
-        bool result = unburnableToken.safeTransfer(_to, _transferAmount);
+        unburnableToken.safeTransfer(_to, _transferAmount);
 
-        assertTrue(result);
-        assertEq(unburnableToken.totalSupply(), MAX_SUPPLY - _senderBalance);
-        assertEq(unburnableToken.totalClaimed(), _senderBalance);
+        uint expectedClaimed = MAX_CLAIMABLE;
+        assertEq(unburnableToken.totalSupply(), MAX_SUPPLY - expectedClaimed);
+        assertEq(unburnableToken.totalClaimed(), expectedClaimed);
         assertEq(
             unburnableToken.balances(_sender),
             _senderBalance - _transferAmount
@@ -259,12 +278,9 @@ contract UnburnableTokenTest is Test {
     /**
      * @dev Helper function to verify that a `TokensClaimed` revert occurs.
      */
-    function expectTokensClaimedRevert(uint _balance) private {
+    function expectTokensClaimedRevert() private {
         vm.expectRevert(
-            abi.encodeWithSelector(
-                UnburnableToken.TokensClaimed.selector,
-                _balance
-            )
+            abi.encodeWithSelector(UnburnableToken.TokensClaimed.selector)
         );
     }
 

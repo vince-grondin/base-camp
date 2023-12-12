@@ -28,7 +28,7 @@ contract UnburnableToken {
 
     error UnsafeTransfer(address sender);
 
-    error TokensClaimed(uint claimed);
+    error TokensClaimed(uint balance);
 
     event TokensClaimedEvent(
         address recipient,
@@ -43,33 +43,26 @@ contract UnburnableToken {
     }
 
     /**
-     * @notice Adds the supplied amount to the sender's balance.
+     * @notice Adds the maximum claimable amount per user to the sender's balance.
      * @dev Reverts with a `TokensClaimed` error if a sender tries to claim more than once.
      *      Reverts with a `AllTokensClaimed` error if there are no tokens left to claim.
      *      Reverts with a `InsufficientSupply` error if there are not enough tokens left to claim.
-     * @param _amount The amount to add to the sender's balance.
      * @return Whether the operation succeeded.
      */
-    function claim(uint _amount) public returns (bool) {
+    function claim() public returns (bool) {
         if (balances[msg.sender] != 0)
             revert TokensClaimed(balances[msg.sender]);
 
         if (totalSupply == 0)
             revert AllTokensClaimed();
 
-        if (_amount > totalSupply)
-            revert InsufficientSupply(totalSupply);
-
-        if (_amount > MAX_CLAIMABLE)
-            revert ExceedsUserMaxClaimable(MAX_CLAIMABLE);
-
-        balances[msg.sender] = _amount;
-        totalSupply -= _amount;
-        totalClaimed += _amount;
+        balances[msg.sender] = MAX_CLAIMABLE;
+        totalSupply -= MAX_CLAIMABLE;
+        totalClaimed += MAX_CLAIMABLE;
 
         emit TokensClaimedEvent(
             msg.sender,
-            _amount,
+            MAX_CLAIMABLE,
             balances[msg.sender],
             totalSupply,
             totalClaimed

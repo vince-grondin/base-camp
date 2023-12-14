@@ -5,6 +5,10 @@ import "forge-std/Test.sol";
 import "./support/AddressGenerator.sol";
 import "../src/HaikuNFT.sol";
 
+/**
+ * @title Verifies the behavior of the HaikuNFT contract.
+ * @author Roch
+ */
 contract HaikuNFTTest is Test {
     using AddressGenerator for uint;
 
@@ -217,8 +221,8 @@ contract HaikuNFTTest is Test {
     }
 
     /**
-     * @dev Verifies that no Haikus are returned when calling `getMySharedHaikus` if no Haikus were shared with the
-     *      sender.
+     * @dev Verifies that calling `getMySharedHaikus` when no Haikus were shared with the sender reverts with a
+     *      `NoHaikusShared` error.
      * @param _haikuFixtureIndex1 The index of the first Haiku to use from the Haiku test fixtures array.
      * @param _haikuFixtureIndex2 The index of the second Haiku to use from the Haiku test fixtures array.
      * @param _haikuFixtureIndex3 The index of the third Haiku to use from the Haiku test fixtures array.

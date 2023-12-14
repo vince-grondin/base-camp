@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "forge-std/Test.sol";
+import "./support/AddressGenerator.sol";
 import "../src/UnburnableToken.sol";
 
 /**
@@ -294,11 +295,5 @@ contract UnburnableTokenTest is Test {
                 _address
             )
         );
-    }
-}
-
-library AddressGenerator {
-    function toAddress(uint _address) public pure returns (address) {
-        return address(uint160(uint256(keccak256(abi.encodePacked(_address)))));
     }
 }
